@@ -23,7 +23,7 @@ class Agent:
             raise Exception('does not want that')
         self.is_owed_good = True
 
-    def take(self, offered_good: int):
+    def receive(self, offered_good: int):
         if not self.is_owed_good == offered_good:
             raise Exception('is not owed that good')
         if self.owns_good:
@@ -36,7 +36,7 @@ class Agent:
             raise Exception('does not owe anything')
         if not self.owns_good:
             raise Exception('pockets are empty')
-        self.owes_good_to.take(self.owns_good)
+        self.owes_good_to.receive(self.owns_good)
         self.owes_good = None
         self.owes_good_to = None
         self.owns_good = None
