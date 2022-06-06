@@ -1,48 +1,79 @@
 from __future__ import annotations
 
+from typing import Optional
+
 
 class Agent:
-    def __init__(self, wanted_good=0, produced_good=0) -> None:
-        self.wants_good = wanted_good
-        self.wanted_goods = 0
+    def __init__(self, id: str) -> None:
+        self.id = id
+        self.goods: list[Good] = []
+        self.kinds_of_iou: dict[Good, Good] = {}
+        pass
 
-        self.produces_good = produced_good
-        self.produced_goods = 0
-        self.owes_goods_to: list[Agent] = []
+    def issue_iou(self, good: Good) -> Good:
+        if not self.kinds_of_iou.get(good):
+            self.kinds_of_iou[good] = Good(
+                exchangable_by=self, exchangable_for=good)
 
-    def produce(self):
-        self.produced_goods += 1
+        return self.kinds_of_iou[good]
 
-    def agree_to_give(self, receiver: Agent, requested_good: int):
-        if requested_good != self.produces_good:
-            raise WrongGoodException()
-        self.owes_goods_to.append(receiver)
+    def take(self, good: Good):
+        self.goods.append(good)
 
-    def wants(self, offered_good: int) -> bool:
-        return self.wants_good == offered_good
+    def replace_iou(self, iou: Good):
+        if not iou.is_iou():
+            raise NotAIouException()
+        if iou not in self.goods:
+            raise IouIsMissingException()
+        i = self.goods.index(iou)
+        self.goods[i] = iou.exchangable_for
 
-    def receive(self, offered_good: int):
-        if not self.wants(offered_good):
-            raise WrongGoodException()
-        self.wanted_goods += 1
+    def exchange_iou(self, iou: Good, owner: Agent) -> Good:
+        if not iou.is_iou:
+            raise NotAIouException()
+        if not iou.exchangable_by == self:
+            raise IouNeedsToBeExchangedElsewhereException()
+        if iou.exchangable_for not in self.goods:
+            raise IouGoodMissing()
 
-    def give(self, receiver: Agent):
-        if self.produced_goods < 1:
-            raise MissingGoodException()
-        if receiver not in self.owes_goods_to:
-            raise WrongReceiverException()
-        receiver.receive(self.produces_good)
-        self.produced_goods -= 1
-        self.owes_goods_to.remove(receiver)
+        owner.replace_iou(iou)
+        self.goods.remove(iou.exchangable_for)
+        return iou.exchangable_for
 
 
-class MissingGoodException(Exception):
+class Good:
+    def __init__(self, id: str = '', exchangable_by: Optional[Agent] = None, exchangable_for: Optional[Good] = None) -> None:
+        self.id = id
+        self.exchangable_by = exchangable_by
+        self.exchangable_for = exchangable_for
+
+        if self.id == '' and not self.is_iou():
+            raise NeededIdOrExchangableOptsException()
+
+        if self.id == '':
+            self.id = f'get {exchangable_for.id} from {exchangable_by.id}'
+
+    def is_iou(self) -> bool:
+        if self.exchangable_by and self.exchangable_for:
+            return True
+        return False
+
+
+class NeededIdOrExchangableOptsException(Exception):
     pass
 
 
-class WrongGoodException(Exception):
+class NotAIouException(Exception):
     pass
 
 
-class WrongReceiverException(Exception):
+class IouGoodMissing(Exception):
+    pass
+
+
+class IouIsMissingException(Exception):
+    pass
+
+
+class IouNeedsToBeExchangedElsewhereException(Exception):
     pass

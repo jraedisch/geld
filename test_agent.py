@@ -1,35 +1,32 @@
-from agent import Agent
 import pytest
+
+from agent import Agent, Good
 
 
 def test_agent():
-    a1 = Agent(produced_good=2, wanted_good=1)
-    a2 = Agent(produced_good=1, wanted_good=2)
+    a1 = Agent(id='1')
+    a2 = Agent(id='2')
 
-    assert a1.wants(1)
-    assert a1.wanted_goods == 0
-    assert a2.produces_good == 1
+    g1 = Good(id='a')
+    a1.take(g1)
 
-    a1.produce()
-    assert a1.produced_goods == 1
+    assert a1.goods == [g1]
 
-    a2.produce()
-    assert a2.produced_goods == 1
+    g1_by_a1 = a1.issue_iou(g1)
 
-    a1.agree_to_give(a2, 2)
-    assert a1.owes_goods_to == [a2]
+    assert g1_by_a1 == a1.issue_iou(g1)
+    assert g1_by_a1.id == 'get a from 1'
 
-    a2.agree_to_give(a1, 1)
-    assert a2.owes_goods_to == [a1]
+    g2 = Good(id='b')
+    a2.take(g2)
+    g2_by_a2 = a2.issue_iou(g2)
 
-    a1.give(a2)
-    assert a1.owes_goods_to == []
+    a2.take(g1_by_a1)
 
-    assert a2.wanted_goods == 1
-    assert a1.produced_goods == 0
+    assert a2.goods == [g2, g1_by_a1]
 
-    a2.give(a1)
-    assert a2.owes_goods_to == []
+    a1.take(g2_by_a2)
 
-    assert a1.wanted_goods == 1
-    assert a2.produced_goods == 0
+    a1.exchange_iou(g1_by_a1, a2)
+    assert a2.goods == [g2, g1]
+    assert a1.goods == [g2_by_a2]
