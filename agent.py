@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from pexpect import ExceptionPexpect
+
 
 class Agent:
     def __init__(self, id: str) -> None:
@@ -17,6 +19,12 @@ class Agent:
 
         return self.kinds_of_iou[good]
 
+    def give(self, receiver: Agent, good: Good):
+        if not good in self.goods:
+            raise GoodIsMissing()
+        receiver.take(good)
+        self.goods.remove(good)
+
     def take(self, good: Good):
         self.goods.append(good)
 
@@ -28,7 +36,7 @@ class Agent:
         i = self.goods.index(iou)
         self.goods[i] = iou.exchangable_for
 
-    def exchange_iou(self, iou: Good, owner: Agent) -> Good:
+    def honor_iou(self, iou: Good, owner: Agent) -> Good:
         if not iou.is_iou:
             raise NotAIouException()
         if not iou.exchangable_by == self:
@@ -51,7 +59,7 @@ class Good:
             raise NeededIdOrExchangableOptsException()
 
         if self.id == '':
-            self.id = f'get {exchangable_for.id} from {exchangable_by.id}'
+            self.id = f'{exchangable_by.id} owes {exchangable_for.id}'
 
     def is_iou(self) -> bool:
         if self.exchangable_by and self.exchangable_for:
@@ -64,6 +72,10 @@ class NeededIdOrExchangableOptsException(Exception):
 
 
 class NotAIouException(Exception):
+    pass
+
+
+class GoodIsMissing(Exception):
     pass
 
 

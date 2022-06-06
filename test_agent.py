@@ -4,29 +4,37 @@ from agent import Agent, Good
 
 
 def test_agent():
-    a1 = Agent(id='1')
-    a2 = Agent(id='2')
+    jasper = Agent(id='Jasper')
+    elizabeth = Agent(id='Elizabeth')
 
-    g1 = Good(id='a')
-    a1.take(g1)
+    ork = Good(id='Ork')
+    jasper.take(ork)
 
-    assert a1.goods == [g1]
+    assert jasper.goods == [ork]
 
-    g1_by_a1 = a1.issue_iou(g1)
+    ork_by_jasper = jasper.issue_iou(ork)
 
-    assert g1_by_a1 == a1.issue_iou(g1)
-    assert g1_by_a1.id == 'get a from 1'
+    assert ork_by_jasper == jasper.issue_iou(ork)
+    assert ork_by_jasper.id == 'Jasper owes Ork'
 
-    g2 = Good(id='b')
-    a2.take(g2)
-    g2_by_a2 = a2.issue_iou(g2)
+    drache = Good(id='Drache')
+    drache_by_elizabeth = elizabeth.issue_iou(drache)
 
-    a2.take(g1_by_a1)
+    elizabeth.take(ork_by_jasper)
 
-    assert a2.goods == [g2, g1_by_a1]
+    assert elizabeth.goods == [ork_by_jasper]
 
-    a1.take(g2_by_a2)
+    jasper.take(drache_by_elizabeth)
 
-    a1.exchange_iou(g1_by_a1, a2)
-    assert a2.goods == [g2, g1]
-    assert a1.goods == [g2_by_a2]
+    jasper.honor_iou(ork_by_jasper, elizabeth)
+    assert elizabeth.goods == [ork]
+    assert jasper.goods == [drache_by_elizabeth]
+
+    max = Agent(id="Max")
+    hausaufgaben = Good(id='Hausaufgaben')
+    max.take(hausaufgaben)
+
+    jasper.give(max, drache_by_elizabeth)
+    max.give(jasper, hausaufgaben)
+    assert max.goods == [drache_by_elizabeth]
+    assert jasper.goods == [hausaufgaben]
