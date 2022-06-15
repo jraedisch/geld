@@ -1,6 +1,6 @@
 import pytest
 
-from agent import Agent, Good
+from geld import Agent, Good
 
 
 def test_agent():
